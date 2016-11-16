@@ -1,4 +1,4 @@
-Starter Tempalte Project for Jekyll
+Starter Template Project for Jekyll
 ===================================
 
 A Jekyll starter project based on @shakyShane https://github.com/shakyShane/jekyll-gulp-sass-browser-sync repo
