@@ -5,10 +5,13 @@ var cleanCss    = require('gulp-clean-css');
 var prefix      = require('gulp-autoprefixer');
 var cp          = require('child_process');
 var del         = require('del');
+var argv        = require('yargs').argv;
 
-var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
-var messages = {
-    jekyllBuild: '<span style="color: grey">Running:</span> $ bundle exec jekyll build'
+var jekyll    = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
+var incDrafts = (argv.drafts === undefined) ? false : true;
+
+var messages  = {
+    jekyllBuild: 'DEV MODE: Building Jekyll Site\n<span style="color: grey">Running:</span> $ bundle exec jekyll build'
 };
 
 /**
@@ -16,8 +19,15 @@ var messages = {
  */
 gulp.task('jekyll-build', function (done) {
     browserSync.notify(messages.jekyllBuild);
-    return cp.spawn( jekyll , ['build'], {stdio: 'inherit'})
-        .on('close', done);
+
+    if(incDrafts){
+        return cp.spawn( jekyll , ['build', '--drafts'], {stdio: 'inherit'})
+            .on('close', done);
+    } else {
+        return cp.spawn( jekyll , ['build'], {stdio: 'inherit'})
+            .on('close', done);
+    }
+
 });
 
 /**
@@ -58,12 +68,20 @@ gulp.task('sass', function () {
 });
 
 /**
+ * Grab data from Contentful in YAML format and place in _data folder
+ */
+gulp.task('contentful', function(done){
+    return cp.spawn(jekyll , ['contentful'], {stdio: 'inherit'})
+        .on('close', done);
+});
+
+/**
  * Watch scss files for changes & recompile
  * Watch html/md files, run jekyll & reload BrowserSync
  */
 gulp.task('watch', function () {
     gulp.watch('assets/css/**', ['sass']);
-    gulp.watch(['*.html', '_layouts/*.html', '_posts/*'], ['jekyll-rebuild']);
+    gulp.watch(['*.html', '_layouts/**', '_posts/*', 'assets/scripts/**'], ['jekyll-rebuild']);
 });
 
 /**
@@ -71,14 +89,19 @@ gulp.task('watch', function () {
  * compile the jekyll site, launch BrowserSync & watch files.
  */
 gulp.task('default', ['browser-sync', 'watch']);
+
 /**
  * task to run when building on Netlify (runs all tasks
  * appart from browser-sync)
  */
-gulp.task('netlify-deploy', ['sass', 'jekyll-build']);
+ gulp.task('netlify-deploy', ['clean-site', 'sass'], function(done){
+     return cp.spawn(jekyll , ['build', '--config', '_liveConfig.yml'], {stdio: 'inherit'})
+         .on('close', done);
+ });
+
 /**
  * delete the _site folder
  */
 gulp.task('clean-site', function() {
-  return del.sync('_site');
+  return del.sync('_site', '_data/contentful/**');
 });
