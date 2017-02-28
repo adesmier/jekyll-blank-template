@@ -1,0 +1,18 @@
+# Jekyll config file for LIVE builds
+
+name: Project Name
+description: Description of Project
+author: Author Name
+author_email: author@email.com
+url: https://example.com
+# baseurl
+
+exclude:
+  - node_modules
+  - gulpfile.js
+  - package.json
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - assets/css/modules
+  - assets/css/main.scss
